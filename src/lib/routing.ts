@@ -8,6 +8,8 @@ export interface RouteResult {
 // Memory cache for routes to ensure instant repeat results
 const routeCache: Record<string, RouteResult> = {};
 
+const OSRM_URL = import.meta.env.VITE_OSRM_URL || 'https://router.project-osrm.org/route/v1/driving';
+
 /**
  * Main Routing Engine with OSRM & Heuristic Fallback
  */
@@ -19,7 +21,7 @@ export const getDrivingDistance = async (start: [number, number], end: [number, 
   const timeoutId = setTimeout(() => controller.abort(), 1000); // Ultra-fast 1-second timeout
 
   try {
-    const url = `https://router.project-osrm.org/route/v1/driving/${start[1]},${start[0]};${end[1]},${end[0]}?overview=full&geometries=geojson`;
+    const url = `${OSRM_URL}/${start[1]},${start[0]};${end[1]},${end[0]}?overview=full&geometries=geojson`;
     const response = await fetch(url, { signal: controller.signal });
     clearTimeout(timeoutId);
     

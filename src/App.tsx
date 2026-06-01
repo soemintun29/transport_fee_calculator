@@ -37,9 +37,6 @@ interface Config {
   base_fee: number;
   base_distance: number;
   fee_per_km: number;
-  bike_base_fee: number;
-  bike_base_distance: number;
-  bike_fee_per_km: number;
 }
 
 function RecenterMap({ center }: { center: [number, number] }) {
@@ -53,8 +50,8 @@ function RecenterMap({ center }: { center: [number, number] }) {
 export default function App() {
   const [wards, setWards] = useState<Ward[]>([]);
   const [config, setConfig] = useState<Config[]>([
-    { name: 'Yangon Main SC', region: 'Yangon', center_lat: 16.8661, center_lng: 96.1951, base_fee: 5000, base_distance: 5, fee_per_km: 1000, bike_base_fee: 3000, bike_base_distance: 5, bike_fee_per_km: 500 },
-    { name: 'Mandalay Main SC', region: 'Mandalay', center_lat: 21.9588, center_lng: 96.0891, base_fee: 5000, base_distance: 5, fee_per_km: 1000, bike_base_fee: 3000, bike_base_distance: 5, bike_fee_per_km: 500 }
+    { name: 'Yangon Main SC', region: 'Yangon', center_lat: 16.8661, center_lng: 96.1951, base_fee: 5000, base_distance: 5, fee_per_km: 1000 },
+    { name: 'Mandalay Main SC', region: 'Mandalay', center_lat: 21.9588, center_lng: 96.0891, base_fee: 5000, base_distance: 5, fee_per_km: 1000 }
   ]);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -70,7 +67,6 @@ export default function App() {
   const [wardSearch, setWardSearch] = useState('');
   const [showWardDropdown, setShowWardDropdown] = useState(false);
   const [detailedAddress, setDetailedAddress] = useState('');
-  const [vehicleType, setVehicleType] = useState<'car' | 'bike'>('car');
   
   // Audit Form State
   const [customerName, setCustomerName] = useState('');
@@ -171,10 +167,7 @@ export default function App() {
       center_lng: adminRegion === 'Yangon' ? 96.1951 : 96.0891,
       base_fee: 5000,
       base_distance: 5,
-      fee_per_km: 1000,
-      bike_base_fee: 3000,
-      bike_base_distance: 5,
-      bike_fee_per_km: 500
+      fee_per_km: 1000
     }]);
   };
 
@@ -320,13 +313,13 @@ export default function App() {
       const bestRoute = routeData as RouteResult;
       setRoute(bestRoute);
       setSelectedCenter(bestCenterByAir);
-      const baseFee = vehicleType === 'bike' ? bestCenterByAir.bike_base_fee : bestCenterByAir.base_fee;
-      const baseDist = vehicleType === 'bike' ? bestCenterByAir.bike_base_distance : bestCenterByAir.base_distance;
-      const rateKm = vehicleType === 'bike' ? bestCenterByAir.bike_fee_per_km : bestCenterByAir.fee_per_km;
+      const baseFee = bestCenterByAir.base_fee;
+      const baseDist = bestCenterByAir.base_distance;
+      const rateKm = bestCenterByAir.fee_per_km;
 
       const excessDist = Math.max(0, bestRoute.distanceKm - baseDist);
       const fee = baseFee + (excessDist * rateKm);
-      setCalculatedFee(Math.ceil(fee / 100) * 100);
+      setCalculatedFee(Math.round(fee / 1000) * 1000);
       setShowMap(true);
       
       // Removed the blocking alert for MIMU database to improve perceived speed.
@@ -364,10 +357,10 @@ export default function App() {
       const bestRoute = routeData as RouteResult;
       setRoute(bestRoute);
       setSelectedCenter(bestCenterByAir);
-      const baseFee = vehicleType === 'bike' ? bestCenterByAir.bike_base_fee : bestCenterByAir.base_fee;
-      const baseDist = vehicleType === 'bike' ? bestCenterByAir.bike_base_distance : bestCenterByAir.base_distance;
-      const rateKm = vehicleType === 'bike' ? bestCenterByAir.bike_fee_per_km : bestCenterByAir.fee_per_km;
-      setCalculatedFee(Math.ceil((baseFee + (Math.max(0, bestRoute.distanceKm - baseDist) * rateKm)) / 100) * 100);
+      const baseFee = bestCenterByAir.base_fee;
+      const baseDist = bestCenterByAir.base_distance;
+      const rateKm = bestCenterByAir.fee_per_km;
+      setCalculatedFee(Math.round((baseFee + (Math.max(0, bestRoute.distanceKm - baseDist) * rateKm)) / 1000) * 1000);
     }
   };
 
@@ -383,7 +376,7 @@ export default function App() {
           customer_address: `${detailedAddress || 'N/A'}, ${selectedTownship}, ${region}`,
           wo_number: woNumber || null,
           agreed_fee: calculatedFee,
-          vehicle_type: vehicleType,
+          vehicle_type: 'car',
           service_center_name: selectedCenter.name,
           distance_km: route.distanceKm,
           scheduled_date: scheduledDate || null
@@ -469,7 +462,7 @@ export default function App() {
       ]);
 
       const csvString = [headers.join(','), ...csvRows.map(row => row.join(','))].join('\n');
-      const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+      const blob = new Blob(['\ufeff' + csvString], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -618,21 +611,6 @@ export default function App() {
                           <div className="space-y-1">
                             <label className="text-[9px] font-black text-slate-400 uppercase">+ Rate per Km</label>
                             <input type="number" value={center.fee_per_km} onChange={(e) => updateEditCenter(index, 'fee_per_km', e.target.value)} className="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-md text-xs font-bold focus:border-midea-blue outline-none" />
-                          </div>
-                        </div>
-
-                        <div className="space-y-3">
-                          <h4 className="text-[10px] font-black text-midea-blue uppercase">🏍️ Motorbike Rates</h4>
-                          <div className="space-y-1">
-                            <label className="text-[9px] font-black text-slate-400 uppercase">Base Fee/Dist</label>
-                            <div className="flex gap-1">
-                              <input type="number" value={center.bike_base_fee || ''} onChange={(e) => updateEditCenter(index, 'bike_base_fee', e.target.value)} className="w-2/3 px-2 py-1.5 bg-white border border-slate-200 rounded-md text-xs font-bold focus:border-midea-blue outline-none" placeholder="Ks" />
-                              <input type="number" value={center.bike_base_distance || ''} onChange={(e) => updateEditCenter(index, 'bike_base_distance', e.target.value)} className="w-1/3 px-2 py-1.5 bg-white border border-slate-200 rounded-md text-xs font-bold focus:border-midea-blue outline-none" placeholder="Km" />
-                            </div>
-                          </div>
-                          <div className="space-y-1">
-                            <label className="text-[9px] font-black text-slate-400 uppercase">+ Rate per Km</label>
-                            <input type="number" value={center.bike_fee_per_km || ''} onChange={(e) => updateEditCenter(index, 'bike_fee_per_km', e.target.value)} className="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-md text-xs font-bold focus:border-midea-blue outline-none" />
                           </div>
                         </div>
                       </div>
@@ -855,33 +833,6 @@ export default function App() {
                 value={detailedAddress}
                 onChange={(e) => setDetailedAddress(e.target.value)}
               />
-            </div>
-
-            {/* Vehicle Type Toggle */}
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Vehicle Type</label>
-              <div className="grid grid-cols-2 gap-2 bg-slate-50 p-1 rounded-2xl">
-                <button
-                  onClick={() => setVehicleType('car')}
-                  className={`py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
-                    vehicleType === 'car' 
-                    ? 'bg-white text-midea-blue shadow-sm' 
-                    : 'text-slate-400 hover:text-slate-600'
-                  }`}
-                >
-                  🚗 Car
-                </button>
-                <button
-                  onClick={() => setVehicleType('bike')}
-                  className={`py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
-                    vehicleType === 'bike' 
-                    ? 'bg-white text-midea-blue shadow-sm' 
-                    : 'text-slate-400 hover:text-slate-600'
-                  }`}
-                >
-                  🏍️ Motorbike
-                </button>
-              </div>
             </div>
 
             <button 

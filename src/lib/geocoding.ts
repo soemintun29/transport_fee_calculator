@@ -7,6 +7,8 @@ export interface Location {
 
 const geoCache: Record<string, Location | null> = {};
 
+const GEOCODER_URL = import.meta.env.VITE_GEOCODER_URL || 'http://localhost:8000/geocode';
+
 export const geocodeAddress = async (myanmarAddress: string, englishAddress: string): Promise<Location | null> => {
   const cacheKey = `${myanmarAddress}-${englishAddress}`;
   if (geoCache[cacheKey]) {
@@ -17,7 +19,7 @@ export const geocodeAddress = async (myanmarAddress: string, englishAddress: str
   const performGeocode = async (): Promise<Location | null> => {
     try {
       // Strategy 1: Local Python mm-geo-coder API (Best for raw Myanmar text)
-      const pyResponse = await fetch('http://localhost:8000/geocode', {
+      const pyResponse = await fetch(GEOCODER_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
