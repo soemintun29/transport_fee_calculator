@@ -6870,5 +6870,829 @@
     "ward_mm": "အမှတ် (၉) ရပ်ကွက်",
     "lat": 16.845181,
     "lng": 96.167381
+  },
+  {
+    "region": "Mandalay",
+    "township": "Amarapura",
+    "ward_en": "Sar Taw",
+    "ward_mm": "စားတော်",
+    "lat": 21.843441,
+    "lng": 96.036646
+  },
+  {
+    "region": "Mandalay",
+    "township": "Amarapura",
+    "ward_en": "Daung Yway",
+    "ward_mm": "ဒေါင်းရွေး",
+    "lat": 21.854755,
+    "lng": 96.150096
+  },
+  {
+    "region": "Mandalay",
+    "township": "Amarapura",
+    "ward_en": "Hin Thar",
+    "ward_mm": "ဟင်္သာ",
+    "lat": 21.891846,
+    "lng": 96.038866
+  },
+  {
+    "region": "Mandalay",
+    "township": "Amarapura",
+    "ward_en": "Hpa Ye Kyun",
+    "ward_mm": "ဖရဲကျွန်း",
+    "lat": 21.832697,
+    "lng": 95.997641
+  },
+  {
+    "region": "Mandalay",
+    "township": "Amarapura",
+    "ward_en": "Kan Peit",
+    "ward_mm": "ကမ်းပဲ့",
+    "lat": 21.859232,
+    "lng": 96.045771
+  },
+  {
+    "region": "Mandalay",
+    "township": "Amarapura",
+    "ward_en": "Ba Naw",
+    "ward_mm": "ဘနော",
+    "lat": 21.823153,
+    "lng": 96.018835
+  },
+  {
+    "region": "Mandalay",
+    "township": "Amarapura",
+    "ward_en": "Bone Oe",
+    "ward_mm": "ဘုံးအိုး",
+    "lat": 21.882342,
+    "lng": 96.034831
+  },
+  {
+    "region": "Mandalay",
+    "township": "Amarapura",
+    "ward_en": "Bone Taw Naing Ngan",
+    "ward_mm": "ဘုန်းတော်နိုင်ငံ",
+    "lat": 21.86897,
+    "lng": 95.993127
+  },
+  {
+    "region": "Mandalay",
+    "township": "Amarapura",
+    "ward_en": "Chin",
+    "ward_mm": "ချင်း",
+    "lat": 21.837225,
+    "lng": 96.011463
+  },
+  {
+    "region": "Mandalay",
+    "township": "Amarapura",
+    "ward_en": "Da None",
+    "ward_mm": "ဓနုံး",
+    "lat": 21.864959,
+    "lng": 96.063695
+  },
+  {
+    "region": "Mandalay",
+    "township": "Amarapura",
+    "ward_en": "Kin Bet",
+    "ward_mm": "ကင်းဘက်",
+    "lat": 21.788978,
+    "lng": 96.156255
+  },
+  {
+    "region": "Mandalay",
+    "township": "Amarapura",
+    "ward_en": "Kyee Myin Daing",
+    "ward_mm": "ကြည့်မြင်တိုင်",
+    "lat": 21.853815,
+    "lng": 95.988197
+  },
+  {
+    "region": "Mandalay",
+    "township": "Amarapura",
+    "ward_en": "Leik San Khun",
+    "ward_mm": "လိပ်ဆံခွန်",
+    "lat": 21.831144,
+    "lng": 96.031991
+  },
+  {
+    "region": "Mandalay",
+    "township": "Amarapura",
+    "ward_en": "Let Pan Zin",
+    "ward_mm": "လက်ပန်ဇင်",
+    "lat": 21.871865,
+    "lng": 96.030222
+  },
+  {
+    "region": "Mandalay",
+    "township": "Amarapura",
+    "ward_en": "Ma Gyi Kaing",
+    "ward_mm": "မန်ကျီးကိုင်း",
+    "lat": 21.832305,
+    "lng": 96.13769
+  },
+  {
+    "region": "Mandalay",
+    "township": "Amarapura",
+    "ward_en": "Mi Kyaung Tet",
+    "ward_mm": "မိကျောင်းတက်",
+    "lat": 21.804723,
+    "lng": 96.094109
+  },
+  {
+    "region": "Mandalay",
+    "township": "Amarapura",
+    "ward_en": "Mon Taw",
+    "ward_mm": "မုံတော",
+    "lat": 21.804629,
+    "lng": 96.186706
+  },
+  {
+    "region": "Mandalay",
+    "township": "Amarapura",
+    "ward_en": "Myit Laung",
+    "ward_mm": "မြစ်လောင်း",
+    "lat": 21.837908,
+    "lng": 96.09235
+  },
+  {
+    "region": "Mandalay",
+    "township": "Amarapura",
+    "ward_en": "Myit Tu",
+    "ward_mm": "မြစ်တူး",
+    "lat": 21.850721,
+    "lng": 96.019116
+  },
+  {
+    "region": "Mandalay",
+    "township": "Amarapura",
+    "ward_en": "Nat Yae Kan",
+    "ward_mm": "နတ်ရေကန်",
+    "lat": 21.872192,
+    "lng": 96.088864
+  },
+  {
+    "region": "Mandalay",
+    "township": "Amarapura",
+    "ward_en": "Nge Toe",
+    "ward_mm": "ငယ်တိုး",
+    "lat": 21.896825,
+    "lng": 96.019858
+  },
+  {
+    "region": "Mandalay",
+    "township": "Amarapura",
+    "ward_en": "Pan Chi",
+    "ward_mm": "ပန်းချီ",
+    "lat": 21.880389,
+    "lng": 96.014351
+  },
+  {
+    "region": "Mandalay",
+    "township": "Amarapura",
+    "ward_en": "Pyi Lone Kyaw",
+    "ward_mm": "ပြည်လုံးကျော်",
+    "lat": 21.856435,
+    "lng": 96.118181
+  },
+  {
+    "region": "Mandalay",
+    "township": "Amarapura",
+    "ward_en": "Sar Toe",
+    "ward_mm": "စာတိုး",
+    "lat": 21.842253,
+    "lng": 96.073814
+  },
+  {
+    "region": "Mandalay",
+    "township": "Amarapura",
+    "ward_en": "Sauk Taw Wa",
+    "ward_mm": "ဆောက်တောဝ",
+    "lat": 21.843771,
+    "lng": 96.12139
+  },
+  {
+    "region": "Mandalay",
+    "township": "Amarapura",
+    "ward_en": "Say Oe Bo",
+    "ward_mm": "ဆေးအိုးဘို",
+    "lat": 21.841338,
+    "lng": 95.988719
+  },
+  {
+    "region": "Mandalay",
+    "township": "Amarapura",
+    "ward_en": "Shan Ka Lay Kyun",
+    "ward_mm": "ရှမ်းကလေးကျွန်း",
+    "lat": 21.943809,
+    "lng": 96.051898
+  },
+  {
+    "region": "Mandalay",
+    "township": "Amarapura",
+    "ward_en": "Shwe Kyet Yet",
+    "ward_mm": "ရွှေကြက်ယက်",
+    "lat": 21.88109,
+    "lng": 96.006362
+  },
+  {
+    "region": "Mandalay",
+    "township": "Amarapura",
+    "ward_en": "Sin Boe",
+    "ward_mm": "ဆင်ဘိုး",
+    "lat": 21.869963,
+    "lng": 96.137803
+  },
+  {
+    "region": "Mandalay",
+    "township": "Amarapura",
+    "ward_en": "Sin Ywar Myin Hmu",
+    "ward_mm": "ဆင်ရွာမြင်းမှူး",
+    "lat": 21.86253,
+    "lng": 96.018736
+  },
+  {
+    "region": "Mandalay",
+    "township": "Amarapura",
+    "ward_en": "Ta Lin Gyi",
+    "ward_mm": "တလင်းကြီး",
+    "lat": 21.818532,
+    "lng": 96.113475
+  },
+  {
+    "region": "Mandalay",
+    "township": "Amarapura",
+    "ward_en": "Ta Moke Soe",
+    "ward_mm": "တမုတ်ဆိုး",
+    "lat": 21.846155,
+    "lng": 96.157799
+  },
+  {
+    "region": "Mandalay",
+    "township": "Amarapura",
+    "ward_en": "Tat Gyi",
+    "ward_mm": "တပ်ကြီး",
+    "lat": 21.865289,
+    "lng": 96.00324
+  },
+  {
+    "region": "Mandalay",
+    "township": "Amarapura",
+    "ward_en": "Taung Kaing",
+    "ward_mm": "တောင်ကိုင်း",
+    "lat": 21.809708,
+    "lng": 96.15087
+  },
+  {
+    "region": "Mandalay",
+    "township": "Amarapura",
+    "ward_en": "Taung Tha Man",
+    "ward_mm": "တောင်သမန်",
+    "lat": 21.893386,
+    "lng": 96.074742
+  },
+  {
+    "region": "Mandalay",
+    "township": "Amarapura",
+    "ward_en": "Taw Twin",
+    "ward_mm": "တောတွင်",
+    "lat": 21.863784,
+    "lng": 96.188723
+  },
+  {
+    "region": "Mandalay",
+    "township": "Amarapura",
+    "ward_en": "Thu Nge Taw",
+    "ward_mm": "သူငယ်တော်",
+    "lat": 21.867924,
+    "lng": 96.025789
+  },
+  {
+    "region": "Mandalay",
+    "township": "Amarapura",
+    "ward_en": "U Yin Taw",
+    "ward_mm": "ဥယျာဉ်တော်",
+    "lat": 21.85816,
+    "lng": 96.061749
+  },
+  {
+    "region": "Mandalay",
+    "township": "Amarapura",
+    "ward_en": "Urban (Amarapura)",
+    "ward_mm": "Amarapura",
+    "lat": 21.916836,
+    "lng": 96.062215
+  },
+  {
+    "region": "Mandalay",
+    "township": "Amarapura",
+    "ward_en": "Urban (Myitnge)",
+    "ward_mm": "Myitnge",
+    "lat": 21.854604,
+    "lng": 96.069926
+  },
+  {
+    "region": "Mandalay",
+    "township": "Amarapura",
+    "ward_en": "Yae Kyi Pauk",
+    "ward_mm": "ရေကြည်ပေါက်",
+    "lat": 21.855694,
+    "lng": 96.038616
+  },
+  {
+    "region": "Mandalay",
+    "township": "Amarapura",
+    "ward_en": "Yae Poke",
+    "ward_mm": "ရေပုတ်",
+    "lat": 21.830482,
+    "lng": 96.181206
+  },
+  {
+    "region": "Mandalay",
+    "township": "Amarapura",
+    "ward_en": "Ye Lun Kyaw",
+    "ward_mm": "ရဲလွန်းကျော်",
+    "lat": 21.848234,
+    "lng": 95.999695
+  },
+  {
+    "region": "Mandalay",
+    "township": "Amarapura",
+    "ward_en": "Yin Taw",
+    "ward_mm": "ယဉ်တော်",
+    "lat": 21.919461,
+    "lng": 96.030195
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Kyauk Mee",
+    "ward_mm": "ကျောက်မီး",
+    "lat": 21.905506,
+    "lng": 96.2067
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Boke",
+    "ward_mm": "ဘုတ်",
+    "lat": 22.102027,
+    "lng": 96.216024
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Da Hat Taw",
+    "ward_mm": "ဒဟတ္တော",
+    "lat": 22.146312,
+    "lng": 96.208102
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Done Kone",
+    "ward_mm": "ဒုန်းကုန်း",
+    "lat": 22.031359,
+    "lng": 96.079984
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Forest",
+    "ward_mm": "Forest",
+    "lat": 21.998008,
+    "lng": 96.245667
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Ahr Laung",
+    "ward_mm": "အာလောင်",
+    "lat": 22.047487,
+    "lng": 96.062849
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Aing Gyi",
+    "ward_mm": "အိုင်ကြီး",
+    "lat": 21.942426,
+    "lng": 96.198831
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Aung Chan Thar",
+    "ward_mm": "အောင်ချမ်းသာ",
+    "lat": 22.031774,
+    "lng": 96.107671
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Bagan Tat",
+    "ward_mm": "ပုဂံတပ်",
+    "lat": 22.031135,
+    "lng": 96.064901
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Bant Kwe",
+    "ward_mm": "ဘန့်ကွဲ",
+    "lat": 21.942455,
+    "lng": 96.178741
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Bant Tin",
+    "ward_mm": "ဘန့်တင်",
+    "lat": 21.934125,
+    "lng": 96.170494
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Boe Hla Kone",
+    "ward_mm": "ဘိုးလှကုန်း",
+    "lat": 21.949004,
+    "lng": 96.030973
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Gan Da Mar",
+    "ward_mm": "ဂန္ဓမာ",
+    "lat": 22.110359,
+    "lng": 96.166503
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Gyaint Gyi",
+    "ward_mm": "ဂျိုင့်ကြီး",
+    "lat": 21.987505,
+    "lng": 96.024841
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Hin Ywet Su",
+    "ward_mm": "ဟင်းရွက်စု",
+    "lat": 21.974679,
+    "lng": 96.053018
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Hman Pin",
+    "ward_mm": "မှန်ပင်",
+    "lat": 22.040366,
+    "lng": 96.186716
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Hnan Gyi",
+    "ward_mm": "နှမ်းကြီး",
+    "lat": 22.009812,
+    "lng": 96.187697
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "In Gyin",
+    "ward_mm": "အင်ဂျင်",
+    "lat": 22.07745,
+    "lng": 96.176171
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Kan Gyi",
+    "ward_mm": "ကံကြီး",
+    "lat": 22.131027,
+    "lng": 96.213257
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Kan Pyin",
+    "ward_mm": "ကံပြင်",
+    "lat": 22.100945,
+    "lng": 96.186945
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Kaung Mun",
+    "ward_mm": "ကောင်းမွန်",
+    "lat": 22.140491,
+    "lng": 96.163872
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Kyar Ni Kan",
+    "ward_mm": "ကြာနီကန်",
+    "lat": 22.089877,
+    "lng": 96.152462
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Kyu Wun",
+    "ward_mm": "ကြူဝန်း",
+    "lat": 21.918238,
+    "lng": 96.231019
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Kyun Sin",
+    "ward_mm": "ကျွန်းဆင်",
+    "lat": 22.007495,
+    "lng": 96.04138
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Kywe Yae Kone",
+    "ward_mm": "ကျွဲရေကုန်း",
+    "lat": 22.025247,
+    "lng": 96.128233
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Let Kaung",
+    "ward_mm": "လက်ကောင်း",
+    "lat": 21.919579,
+    "lng": 96.162373
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Let Thit",
+    "ward_mm": "လက်သစ်",
+    "lat": 21.932965,
+    "lng": 96.193563
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Ma Naw Ma Ya",
+    "ward_mm": "မနောမယ",
+    "lat": 22.06175,
+    "lng": 96.136131
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Me Kin Kone",
+    "ward_mm": "မဲကင်းကုန်း",
+    "lat": 22.011007,
+    "lng": 96.141216
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Min Kan",
+    "ward_mm": "မင်းကန်",
+    "lat": 22.071874,
+    "lng": 96.210595
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Min Ye Hla",
+    "ward_mm": "မင်းရဲလှ",
+    "lat": 21.998938,
+    "lng": 96.060159
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Nan Dar",
+    "ward_mm": "နန္ဒာ",
+    "lat": 22.047151,
+    "lng": 96.110939
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Sin But",
+    "ward_mm": "ဆင်ဘွတ်",
+    "lat": 22.053343,
+    "lng": 96.210039
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Nan U Lwin",
+    "ward_mm": "နန်းဦးလွင်",
+    "lat": 21.986128,
+    "lng": 96.134458
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Nay Rit Sa Ya",
+    "ward_mm": "နေရဉ္စယျ",
+    "lat": 22.042669,
+    "lng": 96.138263
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Ngwe Taung",
+    "ward_mm": "ငွေတောင်",
+    "lat": 21.897235,
+    "lng": 96.171377
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Nyein Chan Thar Zan",
+    "ward_mm": "ငြိမ်းချမ်းသာဇံ",
+    "lat": 22.037822,
+    "lng": 96.12774
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Ohn Chaw",
+    "ward_mm": "အုန်းချော",
+    "lat": 21.877083,
+    "lng": 96.232162
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Pathein Ka Lay",
+    "ward_mm": "ပုသိမ်ကလေး",
+    "lat": 22.077559,
+    "lng": 96.138599
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Pauk Myaing",
+    "ward_mm": "ပေါက်မြိုင်",
+    "lat": 22.034983,
+    "lng": 96.093249
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Se Taw",
+    "ward_mm": "ဆည်တော်",
+    "lat": 21.89103,
+    "lng": 96.256972
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Shin Taw Kone",
+    "ward_mm": "ရှင်တော်ကုန်း",
+    "lat": 21.974953,
+    "lng": 96.178337
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Shwe Sar Yan",
+    "ward_mm": "ရွှေစာရံ",
+    "lat": 21.845887,
+    "lng": 96.2301
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Sin Ywar Gyi",
+    "ward_mm": "ဆင်ရွာကြီး",
+    "lat": 22.04545,
+    "lng": 96.162237
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Su Kar Kin",
+    "ward_mm": "ဆူးကားကင်း",
+    "lat": 22.053277,
+    "lng": 96.077081
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Ta Laing Shey (North)",
+    "ward_mm": "တလိုင်းရှည် (မြောက်)",
+    "lat": 21.887199,
+    "lng": 96.205779
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Ta Laing Shey (South)",
+    "ward_mm": "တလိုင်းရှည် (တောင်)",
+    "lat": 21.88339,
+    "lng": 96.174008
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Tha Le Kone",
+    "ward_mm": "သလဲကုန်း",
+    "lat": 21.91442,
+    "lng": 96.169784
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Tha Yet Ta Pin",
+    "ward_mm": "သရက်တပင်",
+    "lat": 22.016419,
+    "lng": 96.07909
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Than Ma Taw",
+    "ward_mm": "သမ္မတော",
+    "lat": 21.93057,
+    "lng": 96.143161
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "To Tet Kone",
+    "ward_mm": "တိုတက်ကုန်း",
+    "lat": 21.950521,
+    "lng": 96.144386
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Urban (Patheingyi)",
+    "ward_mm": "Patheingyi",
+    "lat": 22.00445,
+    "lng": 96.16005
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Win Chan",
+    "ward_mm": "ဝင်းခြံ",
+    "lat": 22.042202,
+    "lng": 96.076432
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Yae Htwet",
+    "ward_mm": "ရေထွက်",
+    "lat": 21.998037,
+    "lng": 96.176039
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Yae Kyi",
+    "ward_mm": "ရေကြည်",
+    "lat": 21.958336,
+    "lng": 96.187346
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Yae Laung",
+    "ward_mm": "ရေလောင်",
+    "lat": 21.897151,
+    "lng": 96.141558
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Yan Kin Taung",
+    "ward_mm": "ရန်ကင်းတောင်",
+    "lat": 21.997365,
+    "lng": 96.153282
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Ywar Thit",
+    "ward_mm": "ရွာသစ်",
+    "lat": 22.06977,
+    "lng": 96.158231
+  },
+  {
+    "region": "Mandalay",
+    "township": "Patheingyi",
+    "ward_en": "Zee Cho Kone",
+    "ward_mm": "ဇီးချိုကုန်း",
+    "lat": 22.017565,
+    "lng": 96.165625
   }
 ]
