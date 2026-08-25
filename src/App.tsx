@@ -50,8 +50,9 @@ function RecenterMap({ center }: { center: [number, number] }) {
 export default function App() {
   const [wards, setWards] = useState<Ward[]>([]);
   const [config, setConfig] = useState<Config[]>([
-    { name: 'Yangon Main SC', region: 'Yangon', center_lat: 16.8661, center_lng: 96.1951, base_fee: 5000, base_distance: 5, fee_per_km: 1000 },
-    { name: 'Mandalay Main SC', region: 'Mandalay', center_lat: 21.9588, center_lng: 96.0891, base_fee: 5000, base_distance: 5, fee_per_km: 1000 }
+    { name: 'Hlaing Thar Yar Service Center', region: 'Yangon', center_lat: 16.876891526566325, center_lng: 96.0792064888151, base_fee: 5000, base_distance: 5, fee_per_km: 1000 },
+    { name: 'Lanmadaw Service Center', region: 'Yangon', center_lat: 16.776430150432684, center_lng: 96.1436215097854, base_fee: 5000, base_distance: 5, fee_per_km: 1000 },
+    { name: 'Mandalay Main SC', region: 'Mandalay', center_lat: 21.974300626946, center_lng: 96.08793700524559, base_fee: 5000, base_distance: 5, fee_per_km: 1000 }
   ]);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -990,7 +991,7 @@ export default function App() {
                 />
                 
                 {config.map(c => (
-                  <Marker key={c.region} position={[c.center_lat, c.center_lng]}>
+                  <Marker key={`${c.region}-${c.name}`} position={[c.center_lat, c.center_lng]}>
                     <Popup className="font-bold uppercase tracking-widest text-[9px]">
                       {c.region} Service Center
                     </Popup>
