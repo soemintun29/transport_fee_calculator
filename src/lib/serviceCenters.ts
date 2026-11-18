@@ -57,12 +57,17 @@ const REJECTED_PINS: { lat: number; lng: number; reason: string }[] = [
   { lat: 16.776430150432684, lng: 96.1436215097854, reason: 'Hledan Street — not a service center' },
 ];
 
-const REJECT_WITHIN_KM = 0.2;
+const REJECT_WITHIN_KM = 0.08;
 
 function isRejectedPin(lat: number, lng: number): boolean {
   return REJECTED_PINS.some(
     (p) => calculateHaversineDistance(lat, lng, p.lat, p.lng) <= REJECT_WITHIN_KM
   );
+}
+
+function isRealCenterName(name: string): boolean {
+  const n = (name || '').toLowerCase().replace(/\s+/g, ' ').trim();
+  return DEFAULT_SERVICE_CENTERS.some((c) => c.name.toLowerCase() === n);
 }
 
 function isGhostName(name: string): boolean {
@@ -116,7 +121,7 @@ export function mergeServiceConfig(fromDb: ServiceCenterConfig[] | null | undefi
   const cleaned = (fromDb || []).flatMap((c) => {
     const normalized = normalizeCenter(c);
     if (!normalized) return [];
-    if (isRejectedPin(normalized.center_lat, normalized.center_lng)) return [];
+    if (!isRealCenterName(normalized.name) && isRejectedPin(normalized.center_lat, normalized.center_lng)) return [];
     if (isGhostName(normalized.name)) return [];
     return [normalized];
   });
@@ -127,7 +132,7 @@ export function mergeServiceConfig(fromDb: ServiceCenterConfig[] | null | undefi
   DEFAULT_SERVICE_CENTERS.forEach((fallback) => {
     const k = keyOf(fallback);
     const existing = byKey.get(k);
-    if (!existing || isRejectedPin(existing.center_lat, existing.center_lng)) {
+    if (!existing || (!isRealCenterName(existing.name) && isRejectedPin(existing.center_lat, existing.center_lng))) {
       byKey.set(k, { ...fallback });
     }
   });
