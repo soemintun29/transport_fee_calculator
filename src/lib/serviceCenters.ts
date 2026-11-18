@@ -79,17 +79,46 @@ function keyOf(c: Pick<ServiceCenterConfig, 'region' | 'name'>): string {
   return `${c.region}|${c.name}`.toLowerCase();
 }
 
+function asNumber(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string' && value.trim() !== '') {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
+}
+
+/** Supabase numeric columns arrive as strings. Keep saved rates instead of the 1,000 fallback. */
+function normalizeCenter(center: ServiceCenterConfig): ServiceCenterConfig | null {
+  const center_lat = asNumber(center?.center_lat);
+  const center_lng = asNumber(center?.center_lng);
+  const base_fee = asNumber(center?.base_fee);
+  const base_distance = asNumber(center?.base_distance);
+  const fee_per_km = asNumber(center?.fee_per_km);
+  if (
+    center_lat == null ||
+    center_lng == null ||
+    base_fee == null ||
+    base_distance == null ||
+    fee_per_km == null
+  ) {
+    return null;
+  }
+  if (center_lat === 0 || center_lng === 0) return null;
+  return { ...center, center_lat, center_lng, base_fee, base_distance, fee_per_km };
+}
+
 /**
  * Keep real saved branches. Drop Hledan / city-centroid ghosts.
  * Always restore the three actual fallbacks if they are missing or were stored on a rejected pin.
  */
 export function mergeServiceConfig(fromDb: ServiceCenterConfig[] | null | undefined): ServiceCenterConfig[] {
-  const cleaned = (fromDb || []).filter((c) => {
-    if (!c || typeof c.center_lat !== 'number' || typeof c.center_lng !== 'number') return false;
-    if (c.center_lat === 0 || c.center_lng === 0) return false;
-    if (isRejectedPin(c.center_lat, c.center_lng)) return false;
-    if (isGhostName(c.name)) return false;
-    return true;
+  const cleaned = (fromDb || []).flatMap((c) => {
+    const normalized = normalizeCenter(c);
+    if (!normalized) return [];
+    if (isRejectedPin(normalized.center_lat, normalized.center_lng)) return [];
+    if (isGhostName(normalized.name)) return [];
+    return [normalized];
   });
 
   const byKey = new Map<string, ServiceCenterConfig>();
