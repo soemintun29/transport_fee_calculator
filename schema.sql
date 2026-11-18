@@ -49,12 +49,26 @@ BEGIN
     END IF;
 END $$;
 
--- Initial Data for Service Centers
+-- Real dispatch points. Matches src/lib/serviceCenters.ts.
+-- Drops the old demo pins (Yangon city centroid and Hledan Street).
+DELETE FROM public.service_config
+WHERE lower(name) LIKE '%yangon main%'
+   OR lower(name) LIKE '%hledan%'
+   OR lower(name) LIKE '%hleden%'
+   OR lower(name) LIKE '%hle dan%';
+
 INSERT INTO public.service_config (region, name, center_lat, center_lng, base_fee, base_distance, fee_per_km, bike_base_fee, bike_base_distance, bike_fee_per_km)
-VALUES 
-('Yangon', 'Yangon Main SC', 16.8661, 96.1951, 5000, 5, 1000, 3000, 5, 500),
-('Mandalay', 'Mandalay Main SC', 21.9588, 96.0891, 5000, 5, 1000, 3000, 5, 500)
-ON CONFLICT (region, name) DO NOTHING;
+VALUES
+('Yangon', 'Hlaing Thar Yar Service Center', 16.876774, 96.079265, 5000, 5, 1000, 3000, 5, 500),
+('Yangon', 'Lanmadaw Service Center', 16.7750697, 96.1446776, 5000, 5, 1000, 3000, 5, 500),
+('Mandalay', 'Mandalay Main SC', 21.974256, 96.088271, 5000, 5, 1000, 3000, 5, 500)
+ON CONFLICT (region, name) DO UPDATE SET
+    center_lat = EXCLUDED.center_lat,
+    center_lng = EXCLUDED.center_lng,
+    base_fee = EXCLUDED.base_fee,
+    base_distance = EXCLUDED.base_distance,
+    fee_per_km = EXCLUDED.fee_per_km,
+    updated_at = timezone('utc'::text, now());
 
 -- 4. Audit Log Table
 CREATE TABLE IF NOT EXISTS public.transport_audit_log (
