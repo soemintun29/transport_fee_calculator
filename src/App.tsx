@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MapPin, Search, Calculator, Settings, Info, Navigation, AlertCircle, ChevronDown, CheckCircle2, Save, User, Hash, Calendar, Download, FileSpreadsheet } from 'lucide-react';
+import { MapPin, Search, Calculator, Settings, Info, Navigation, AlertCircle, ChevronDown, CheckCircle2, Save, User, Hash, Calendar, Wrench } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -7,6 +7,28 @@ import { supabase } from './lib/supabase';
 import { geocodeAddress, Location } from './lib/geocoding';
 import { getDrivingDistance, RouteResult } from './lib/routing';
 import { calculateHaversineDistance } from './lib/utils';
+import {
+  DEFAULT_SERVICE_CENTERS,
+  addressFor,
+  applyAddresses,
+  mergeServiceConfig,
+  defaultMapCenter,
+  newBranchTemplate,
+  saveCenterAddress,
+  type ServiceCenterConfig,
+} from './lib/serviceCenters';
+import ProductSearch from './components/ProductSearch';
+import FeeSummary from './components/FeeSummary';
+import ServiceCategoryDialog from './components/ServiceCategoryDialog';
+import SettingsPanel from './components/SettingsPanel';
+import { usePricing } from './context/PricingContext';
+import { appendServiceFeeLog, appendTransportLog } from './lib/feeLogs';
+import {
+  lineFromCac,
+  lineFromStandard,
+  loadServiceJob,
+  type ServiceLine,
+} from './lib/serviceCharge';
 
 // Fix Leaflet marker icon
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
@@ -28,16 +50,7 @@ interface Ward {
   lng: number;
 }
 
-interface Config {
-  id?: string;
-  region: string;
-  name: string;
-  center_lat: number;
-  center_lng: number;
-  base_fee: number;
-  base_distance: number;
-  fee_per_km: number;
-}
+type Config = ServiceCenterConfig;
 
 function RecenterMap({ center }: { center: [number, number] }) {
   const map = useMap();
@@ -48,12 +61,9 @@ function RecenterMap({ center }: { center: [number, number] }) {
 }
 
 export default function App() {
+  const pricing = usePricing();
   const [wards, setWards] = useState<Ward[]>([]);
-  const [config, setConfig] = useState<Config[]>([
-    { name: 'Hlaing Thar Yar Service Center', region: 'Yangon', center_lat: 16.876891526566325, center_lng: 96.0792064888151, base_fee: 5000, base_distance: 5, fee_per_km: 1000 },
-    { name: 'Lanmadaw Service Center', region: 'Yangon', center_lat: 16.776430150432684, center_lng: 96.1436215097854, base_fee: 5000, base_distance: 5, fee_per_km: 1000 },
-    { name: 'Mandalay Main SC', region: 'Mandalay', center_lat: 21.974300626946, center_lng: 96.08793700524559, base_fee: 5000, base_distance: 5, fee_per_km: 1000 }
-  ]);
+  const [config, setConfig] = useState<Config[]>(() => applyAddresses(DEFAULT_SERVICE_CENTERS));
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -82,12 +92,20 @@ export default function App() {
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [logStartDate, setLogStartDate] = useState(new Date(new Date().setDate(new Date().getDate() - 30)).toISOString().split('T')[0]);
   const [logEndDate, setLogEndDate] = useState(new Date().toISOString().split('T')[0]);
-  const [isExporting, setIsExporting] = useState(false);
+  const [isExporting] = useState(false);
   const [route, setRoute] = useState<RouteResult | null>(null);
   const [calculatedFee, setCalculatedFee] = useState<number | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
   const [showMap, setShowMap] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
+  const [appTab, setAppTab] = useState<'call' | 'service-only'>('call');
+  const [product, setProduct] = useState('RAC');
+  const [category, setCategory] = useState('');
+  const [serviceOpen, setServiceOpen] = useState(false);
+  const [addServiceOpen, setAddServiceOpen] = useState(false);
+  const [serviceLines, setServiceLines] = useState<ServiceLine[]>([]);
+  const [isSavingService, setIsSavingService] = useState(false);
+  const [serviceSaved, setServiceSaved] = useState(false);
 
   // Admin Config Editing State
   const [adminRegion, setAdminRegion] = useState('Yangon');
@@ -107,7 +125,7 @@ export default function App() {
 
   const updateEditCenter = (index: number, field: keyof Config, value: string) => {
     const updated = [...editCenters];
-    const fieldVal = (field === 'name' || field === 'region') ? value : (value === '' ? 0 : parseFloat(value));
+    const fieldVal = (field === 'name' || field === 'region' || field === 'address') ? value : (value === '' ? 0 : parseFloat(value));
     updated[index] = { ...updated[index], [field]: fieldVal } as Config;
     setEditCenters(updated);
   };
@@ -125,7 +143,8 @@ export default function App() {
 
     try {
       // Remove 'id' if it exists to allow upsert matching purely on region/name
-      const { id, ...dataToSave } = centerToSave;
+      const { id, address, ...dataToSave } = centerToSave;
+      saveCenterAddress(centerToSave.region, centerToSave.name, address || '');
       
       const { error } = await supabase
         .from('service_config')
@@ -135,7 +154,7 @@ export default function App() {
       
       // Reload from Supabase to get real IDs back
       const { data } = await supabase.from('service_config').select('*');
-      if (data) setConfig(data as Config[]);
+      setConfig(applyAddresses(mergeServiceConfig((data || []) as Config[])));
       
       alert(`Settings for ${centerToSave.name} saved successfully!`);
     } catch (err: any) {
@@ -153,7 +172,7 @@ export default function App() {
       if (error) throw error;
       
       const { data } = await supabase.from('service_config').select('*');
-      if (data) setConfig(data as Config[]);
+      setConfig(applyAddresses(mergeServiceConfig((data || []) as Config[])));
       alert('Branch deleted successfully.');
     } catch (err: any) {
       alert('Error deleting: ' + err.message);
@@ -161,15 +180,7 @@ export default function App() {
   };
 
   const addNewCenter = () => {
-    setEditCenters([...editCenters, {
-      region: adminRegion,
-      name: `New ${adminRegion} Branch`,
-      center_lat: adminRegion === 'Yangon' ? 16.8661 : 21.9588,
-      center_lng: adminRegion === 'Yangon' ? 96.1951 : 96.0891,
-      base_fee: 5000,
-      base_distance: 5,
-      fee_per_km: 1000
-    }]);
+    setEditCenters([...editCenters, newBranchTemplate(adminRegion)]);
   };
 
   useEffect(() => {
@@ -188,9 +199,7 @@ export default function App() {
           .from('service_config')
           .select('*');
         
-        if (configData && configData.length > 0) {
-          setConfig(configData as Config[]);
-        }
+        setConfig(applyAddresses(mergeServiceConfig((configData || []) as Config[])));
 
         // Check Admin Role (Temporarily allowing all authenticated users to see settings for setup)
         const { data: { user } } = await supabase.auth.getUser();
@@ -240,9 +249,6 @@ export default function App() {
     setRoute(null);
     setCustomerLocation(null);
     setIsAuditSaved(false);
-    setCustomerName('');
-    setWoNumber('');
-    setScheduledDate('');
 
     let finalLocation: Location | null = null;
 
@@ -365,8 +371,178 @@ export default function App() {
     }
   };
 
+  useEffect(() => {
+    if (product === 'CAC') return;
+    const options = pricing.categoriesFor(product);
+    if (!options.includes(category)) {
+      setCategory(options[0] || '');
+    }
+  }, [product, category, pricing]);
+
+  const seedDefaultService = (pd = product, cat = category) => {
+    const line = pricing.defaultLine(pd, cat);
+    setServiceLines(line ? [line] : []);
+  };
+
+  const handleProductChange = (pd: string) => {
+    setProduct(pd);
+    setServiceSaved(false);
+    if (pd === 'CAC') {
+      setCategory('');
+      if (serviceOpen) seedDefaultService(pd, '');
+      else setServiceLines([]);
+      return;
+    }
+    const nextCat = pricing.categoriesFor(pd)[0] || '';
+    setCategory(nextCat);
+    if (serviceOpen) seedDefaultService(pd, nextCat);
+    else setServiceLines([]);
+  };
+
+  const handleCategoryChange = (next: string) => {
+    setCategory(next);
+    setServiceSaved(false);
+    if (serviceOpen) seedDefaultService(product, next);
+  };
+
+  const continueToService = () => {
+    const cat = product === 'CAC' ? '' : (category || pricing.categoriesFor(product)[0] || '');
+    if (product !== 'CAC' && cat !== category) setCategory(cat);
+    setServiceOpen(true);
+    setServiceSaved(false);
+    seedDefaultService(product, cat);
+  };
+
+  const openServiceOnly = () => {
+    const cat = product === 'CAC' ? '' : (category || pricing.categoriesFor(product)[0] || '');
+    if (product !== 'CAC' && cat !== category) setCategory(cat);
+    setAppTab('service-only');
+    setServiceOpen(true);
+    setServiceSaved(false);
+    setServiceLines((current) => {
+      if (current.length) return current;
+      const line = pricing.defaultLine(product, cat);
+      return line ? [line] : [];
+    });
+  };
+
+  const addStandardLine = (row: Parameters<typeof lineFromStandard>[0]) => {
+    const line = lineFromStandard(row, 'service');
+    if (!line) return;
+    setServiceSaved(false);
+    setServiceLines((current) => (current.some((item) => item.key === line.key) ? current : [...current, line]));
+  };
+
+  const addCacLine = (row: Parameters<typeof lineFromCac>[0]) => {
+    const line = lineFromCac(row);
+    if (!line) return;
+    setServiceSaved(false);
+    setServiceLines((current) => (current.some((item) => item.key === line.key) ? current : [...current, line]));
+  };
+
+  const toggleLineChargeType = (id: string) => {
+    setServiceLines((current) => current.map((line) => {
+      if (line.id !== id) return line;
+      const nextType = line.chargeType === 'service' ? 'diagnosis' : 'service';
+      const amount = nextType === 'diagnosis' ? line.diagnosisFee : line.serviceFee;
+      if (amount == null) return line;
+      return { ...line, chargeType: nextType, amount };
+    }));
+    setServiceSaved(false);
+  };
+
+  const lookupWorkOrder = async () => {
+    if (!woNumber.trim()) {
+      alert('Enter a work order number to check.');
+      return;
+    }
+    const saved = loadServiceJob(woNumber);
+    if (saved) {
+      setCustomerName(saved.customerName);
+      setProduct(saved.product);
+      setCategory(saved.category);
+      setServiceLines(saved.lines);
+      setServiceOpen(true);
+      if (saved.transportFee != null) setCalculatedFee(saved.transportFee);
+    }
+    try {
+      const { data } = await supabase
+        .from('transport_audit_log')
+        .select('*')
+        .eq('wo_number', woNumber.trim())
+        .order('created_at', { ascending: false })
+        .limit(1);
+      const row = data?.[0];
+      if (row) {
+        setCustomerName(row.customer_name || '');
+        setCalculatedFee(row.agreed_fee ?? null);
+        if (row.scheduled_date) setScheduledDate(row.scheduled_date);
+      }
+    } catch {
+      /* lookup is optional */
+    }
+    setServiceOpen(true);
+    if (!saved) seedDefaultService();
+  };
+
+  const handleSaveService = () => {
+    if (!woNumber.trim()) {
+      alert('Work order number is required to save the service fee.');
+      return;
+    }
+    if (!customerName.trim()) {
+      alert('Customer name is required.');
+      return;
+    }
+    if (serviceLines.length === 0) {
+      alert('Add at least one service category, or keep the default line.');
+      return;
+    }
+    setIsSavingService(true);
+    try {
+      appendServiceFeeLog({
+        woNumber: woNumber.trim(),
+        customerName: customerName.trim(),
+        product,
+        category,
+        lines: serviceLines,
+        transportFee: calculatedFee,
+        savedAt: new Date().toISOString(),
+      });
+      setServiceSaved(true);
+    } finally {
+      setIsSavingService(false);
+    }
+  };
+
+  const startNewCall = () => {
+    setCalculatedFee(null);
+    setRoute(null);
+    setCustomerLocation(null);
+    setIsAuditSaved(false);
+    setServiceSaved(false);
+    setServiceOpen(false);
+    setServiceLines([]);
+    setCustomerName('');
+    setWoNumber('');
+    setScheduledDate('');
+    setSelectedTownship('');
+    setSelectedWard(null);
+    setWardSearch('');
+    setDetailedAddress('');
+    setShowMap(false);
+    setAddServiceOpen(false);
+    if (appTab === 'service-only') {
+      setServiceOpen(true);
+      seedDefaultService();
+    }
+  };
+
   const handleSaveAudit = async () => {
-    if (!customerName || !calculatedFee || !selectedCenter || !route || !customerLocation) return;
+    if (!customerName || !woNumber.trim() || !product || !calculatedFee || !selectedCenter || !route || !customerLocation) {
+      alert('Customer name, work order number, product and transport fee are required.');
+      return;
+    }
 
     setIsSavingAudit(true);
     try {
@@ -374,8 +550,8 @@ export default function App() {
         .from('transport_audit_log')
         .insert({
           customer_name: customerName,
-          customer_address: `${detailedAddress || 'N/A'}, ${selectedTownship}, ${region}`,
-          wo_number: woNumber || null,
+          customer_address: `${detailedAddress || 'N/A'}, ${selectedTownship}, ${region} [${pricing.pdLabel(product)}]`,
+          wo_number: woNumber.trim(),
           agreed_fee: calculatedFee,
           vehicle_type: 'car',
           service_center_name: selectedCenter.name,
@@ -383,25 +559,24 @@ export default function App() {
           scheduled_date: scheduledDate || null
         });
 
+      appendTransportLog({
+        createdAt: new Date().toISOString(),
+        customerName,
+        customerAddress: `${detailedAddress || 'N/A'}, ${selectedTownship}, ${region}`,
+        woNumber: woNumber.trim(),
+        transportFee: calculatedFee,
+        serviceCenterName: selectedCenter.name,
+        serviceCenterAddress: addressFor(selectedCenter),
+        serviceCenterLat: selectedCenter.center_lat,
+        serviceCenterLng: selectedCenter.center_lng,
+        distanceKm: route.distanceKm,
+        scheduledDate: scheduledDate || null,
+        region,
+      });
+
       if (error) throw error;
       setIsAuditSaved(true);
-      fetchAuditLogs(); // Refresh logs if we're in admin view
-
-      // Reset form for next input after a brief delay to show success
-      setTimeout(() => {
-        setCalculatedFee(null);
-        setRoute(null);
-        setCustomerLocation(null);
-        setIsAuditSaved(false);
-        setCustomerName('');
-        setWoNumber('');
-        setScheduledDate('');
-        setSelectedTownship('');
-        setSelectedWard(null);
-        setWardSearch('');
-        setDetailedAddress('');
-        setShowMap(false);
-      }, 2000);
+      fetchAuditLogs();
     } catch (err: any) {
       alert('Error saving record: ' + err.message);
     } finally {
@@ -426,55 +601,6 @@ export default function App() {
       setAuditLogs(data || []);
     } catch (err: any) {
       console.error('Error fetching logs:', err.message);
-    }
-  };
-
-  const handleExportCSV = async () => {
-    setIsExporting(true);
-    try {
-      const start = `${logStartDate}T00:00:00`;
-      const end = `${logEndDate}T23:59:59`;
-
-      const { data, error } = await supabase
-        .from('transport_audit_log')
-        .select('*')
-        .gte('created_at', start)
-        .lte('created_at', end)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      if (!data || data.length === 0) {
-        alert('No records found for the selected date range.');
-        return;
-      }
-
-      // Create CSV content
-      const headers = ['Date', 'Customer Name', 'Address', 'Work Order #', 'Fee (Ks)', 'Vehicle', 'Branch', 'Distance (km)', 'Scheduled Date'];
-      const csvRows = data.map(log => [
-        new Date(log.created_at).toLocaleDateString(),
-        `"${log.customer_name}"`,
-        `"${log.customer_address}"`,
-        log.wo_number || 'N/A',
-        log.agreed_fee,
-        log.vehicle_type,
-        log.service_center_name,
-        log.distance_km.toFixed(2),
-        log.scheduled_date || 'N/A'
-      ]);
-
-      const csvString = [headers.join(','), ...csvRows.map(row => row.join(','))].join('\n');
-      const blob = new Blob(['\ufeff' + csvString], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `transport_audit_${logStartDate}_to_${logEndDate}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch (err: any) {
-      alert('Export failed: ' + err.message);
-    } finally {
-      setIsExporting(false);
     }
   };
 
@@ -504,7 +630,25 @@ export default function App() {
             </div>
             <div>
               <span className="text-xl font-black tracking-tighter block leading-none">Midea</span>
-              <span className="text-[8px] font-black uppercase tracking-[0.2em] text-midea-light-blue">Transport Calculator</span>
+              <span className="text-[8px] font-black uppercase tracking-[0.2em] text-midea-light-blue">After-sales fees</span>
+            </div>
+            <div className="hidden sm:flex ml-4 bg-white/10 p-1 rounded-xl">
+              <button
+                type="button"
+                onClick={() => setAppTab('call')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest ${appTab === 'call' ? 'bg-white text-midea-blue' : 'text-midea-light-blue'}`}
+              >
+                <Navigation className="w-3 h-3" />
+                Customer call
+              </button>
+              <button
+                type="button"
+                onClick={openServiceOnly}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest ${appTab === 'service-only' ? 'bg-white text-midea-blue' : 'text-midea-light-blue'}`}
+              >
+                <Wrench className="w-3 h-3" />
+                Service fee only
+              </button>
             </div>
           </div>
           <button 
@@ -518,209 +662,73 @@ export default function App() {
       </header>
 
       <main className="max-w-5xl mx-auto p-4 md:p-8">
+        <div className="sm:hidden flex bg-white p-1 rounded-2xl shadow-sm border border-slate-100 mb-4">
+          <button type="button" onClick={() => setAppTab('call')} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest ${appTab === 'call' ? 'bg-midea-blue text-white' : 'text-slate-400'}`}>Call</button>
+          <button type="button" onClick={openServiceOnly} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest ${appTab === 'service-only' ? 'bg-midea-blue text-white' : 'text-slate-400'}`}>Service only</button>
+        </div>
         {showAdmin && (
           <section className="bg-white rounded-3xl shadow-xl border-2 border-midea-light-blue/20 p-8 mb-8 animate-in slide-in-from-top-4 duration-300">
-            {!isSettingUnlocked ? (
-              <div className="flex flex-col items-center justify-center py-12 space-y-6">
-                <div className="w-16 h-16 bg-midea-blue/5 rounded-full flex items-center justify-center text-midea-blue">
-                  <Settings className="w-8 h-8 animate-spin-slow" />
-                </div>
-                <div className="text-center space-y-2">
-                  <h2 className="text-lg font-black text-midea-blue uppercase tracking-widest">Settings Locked</h2>
-                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Enter Administrator Password to continue</p>
-                </div>
-                <div className="flex w-full max-w-sm gap-2">
-                  <input 
-                    ref={passwordInputRef}
-                    type="password" 
-                    placeholder="Enter Password..."
-                    value={settingsPassword}
-                    onChange={(e) => setSettingsPassword(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleUnlockSettings()}
-                    className="flex-1 px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl outline-none focus:border-midea-blue/20 font-bold text-midea-blue text-center"
-                  />
-                  <button 
-                    onClick={handleUnlockSettings}
-                    className="px-6 py-3 bg-midea-blue text-white rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-midea-light-blue transition-all"
-                  >
-                    Unlock
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <>
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-midea-light-blue/10 rounded-full flex items-center justify-center text-midea-blue">
-                      <Settings className="w-4 h-4" />
-                    </div>
-                    <h2 className="text-sm font-black text-midea-blue uppercase tracking-widest">Service Center Configuration</h2>
-                  </div>
-                  <div className="flex gap-1 bg-slate-100 p-1 rounded-xl">
-                    {['Yangon', 'Mandalay'].map(r => (
-                      <button
-                        key={r}
-                        onClick={() => setAdminRegion(r)}
-                        className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
-                          adminRegion === r ? 'bg-white text-midea-blue shadow-sm' : 'text-slate-400 hover:text-slate-600'
-                        }`}
-                      >
-                        {r}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-8">
-                  {editCenters.map((center, index) => (
-                    <div key={index} className="grid grid-cols-1 gap-4 p-4 border border-slate-100 rounded-2xl bg-slate-50/50">
-                      <div className="flex justify-between items-center mb-2">
-                        <input 
-                          type="text" 
-                          value={center.name} 
-                          onChange={(e) => updateEditCenter(index, 'name', e.target.value)}
-                          className="font-black text-midea-blue bg-transparent border-b-2 border-transparent focus:border-midea-light-blue outline-none px-1 py-0.5 w-1/2"
-                          placeholder="Branch Name (e.g. Yangon Main)"
-                        />
-                        <div className="flex gap-2">
-                          <button onClick={() => saveConfig(center)} className="px-3 py-1 bg-midea-blue text-white rounded text-[8px] font-bold uppercase hover:bg-midea-light-blue transition-colors">Save</button>
-                          {center.id && <button onClick={() => deleteConfig(center)} className="px-3 py-1 bg-red-50 text-red-600 rounded text-[8px] font-bold uppercase hover:bg-red-100 transition-colors">Delete</button>}
-                        </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                          <label className="text-[9px] font-black text-slate-400 uppercase">Latitude</label>
-                          <input type="number" step="any" value={center.center_lat} onChange={(e) => updateEditCenter(index, 'center_lat', e.target.value)} className="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-md text-xs font-bold focus:border-midea-blue outline-none" />
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-[9px] font-black text-slate-400 uppercase">Longitude</label>
-                          <input type="number" step="any" value={center.center_lng} onChange={(e) => updateEditCenter(index, 'center_lng', e.target.value)} className="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-md text-xs font-bold focus:border-midea-blue outline-none" />
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4 border-t border-slate-100 pt-4 mt-2">
-                        <div className="space-y-3">
-                          <h4 className="text-[10px] font-black text-midea-blue uppercase">🚗 Car Rates</h4>
-                          <div className="space-y-1">
-                            <label className="text-[9px] font-black text-slate-400 uppercase">Base Fee/Dist</label>
-                            <div className="flex gap-1">
-                              <input type="number" value={center.base_fee} onChange={(e) => updateEditCenter(index, 'base_fee', e.target.value)} className="w-2/3 px-2 py-1.5 bg-white border border-slate-200 rounded-md text-xs font-bold focus:border-midea-blue outline-none" placeholder="Ks" />
-                              <input type="number" value={center.base_distance} onChange={(e) => updateEditCenter(index, 'base_distance', e.target.value)} className="w-1/3 px-2 py-1.5 bg-white border border-slate-200 rounded-md text-xs font-bold focus:border-midea-blue outline-none" placeholder="Km" />
-                            </div>
-                          </div>
-                          <div className="space-y-1">
-                            <label className="text-[9px] font-black text-slate-400 uppercase">+ Rate per Km</label>
-                            <input type="number" value={center.fee_per_km} onChange={(e) => updateEditCenter(index, 'fee_per_km', e.target.value)} className="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-md text-xs font-bold focus:border-midea-blue outline-none" />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                  
-                  <button 
-                    onClick={addNewCenter}
-                    className="w-full py-3 border-2 border-dashed border-slate-200 rounded-2xl text-xs font-bold text-slate-500 uppercase tracking-widest hover:border-midea-blue hover:text-midea-blue transition-colors flex items-center justify-center gap-2"
-                  >
-                    + Add New Branch to {adminRegion}
-                  </button>
-                </div>
-
-                <div className="mt-12 pt-12 border-t-2 border-slate-100">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-blue-50 rounded-full flex items-center justify-center text-midea-blue">
-                        <Save className="w-4 h-4" />
-                      </div>
-                      <h2 className="text-sm font-black text-midea-blue uppercase tracking-widest">Recent Audit Logs</h2>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-2">
-                      <div className="flex items-center bg-slate-100 px-3 py-1.5 rounded-xl gap-2">
-                        <Calendar className="w-3 h-3 text-slate-400" />
-                        <input 
-                          type="date" 
-                          value={logStartDate} 
-                          onChange={(e) => setLogStartDate(e.target.value)}
-                          className="bg-transparent text-[10px] font-bold text-slate-600 outline-none"
-                        />
-                        <span className="text-[10px] text-slate-300 font-black">TO</span>
-                        <input 
-                          type="date" 
-                          value={logEndDate} 
-                          onChange={(e) => setLogEndDate(e.target.value)}
-                          className="bg-transparent text-[10px] font-bold text-slate-600 outline-none"
-                        />
-                      </div>
-                      <button 
-                        onClick={handleExportCSV}
-                        disabled={isExporting || auditLogs.length === 0}
-                        className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-green-700 transition-all shadow-lg shadow-green-600/20 disabled:opacity-50"
-                      >
-                        {isExporting ? (
-                          <div className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                        ) : (
-                          <Download className="w-3 h-3" />
-                        )}
-                        Export CSV
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="overflow-x-auto rounded-2xl border border-slate-100">
-                    <table className="w-full text-left border-collapse">
-                      <thead>
-                        <tr className="bg-slate-50 border-b border-slate-100">
-                          <th className="px-4 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Date</th>
-                          <th className="px-4 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Customer</th>
-                          <th className="px-4 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">WO #</th>
-                          <th className="px-4 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Fee (Ks)</th>
-                          <th className="px-4 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Branch</th>
-                          <th className="px-4 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Distance</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-50">
-                        {auditLogs.length === 0 ? (
-                          <tr>
-                            <td colSpan={6} className="px-4 py-8 text-center text-slate-400 text-xs font-bold italic">No records found.</td>
-                          </tr>
-                        ) : (
-                          auditLogs.map((log) => (
-                            <tr key={log.id} className="hover:bg-slate-50/50 transition-colors">
-                              <td className="px-4 py-3 text-[10px] font-bold text-slate-600">
-                                {new Date(log.created_at).toLocaleDateString()}
-                              </td>
-                              <td className="px-4 py-3">
-                                <p className="text-[10px] font-black text-midea-blue">{log.customer_name}</p>
-                                <p className="text-[8px] text-slate-400 truncate max-w-[150px]">{log.customer_address}</p>
-                              </td>
-                              <td className="px-4 py-3 text-[10px] font-bold text-slate-500">
-                                {log.wo_number || '—'}
-                              </td>
-                              <td className="px-4 py-3 text-[10px] font-black text-midea-blue">
-                                {log.agreed_fee.toLocaleString()}
-                              </td>
-                              <td className="px-4 py-3 text-[10px] font-bold text-slate-500">
-                                {log.service_center_name}
-                              </td>
-                              <td className="px-4 py-3 text-[10px] font-bold text-slate-500">
-                                {log.distance_km.toFixed(1)} km
-                              </td>
-                            </tr>
-                          ))
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </>
-            )}
+            <SettingsPanel
+              passwordInputRef={passwordInputRef}
+              settingsPassword={settingsPassword}
+              setSettingsPassword={setSettingsPassword}
+              isSettingUnlocked={isSettingUnlocked}
+              onUnlock={handleUnlockSettings}
+              adminRegion={adminRegion}
+              setAdminRegion={setAdminRegion}
+              editCenters={editCenters}
+              updateEditCenter={updateEditCenter}
+              saveConfig={saveConfig}
+              deleteConfig={deleteConfig}
+              addNewCenter={addNewCenter}
+              auditLogs={auditLogs}
+              logStartDate={logStartDate}
+              logEndDate={logEndDate}
+              setLogStartDate={setLogStartDate}
+              setLogEndDate={setLogEndDate}
+              isExporting={isExporting}
+              centers={config}
+            />
           </section>
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left Panel: Form */}
         <div className="lg:col-span-5 space-y-6">
+          {appTab === 'service-only' && (
+            <section className="bg-white rounded-3xl shadow-xl border border-slate-100 p-8 space-y-6">
+              <h2 className="text-sm font-black text-midea-blue uppercase tracking-widest">Service fee only</h2>
+              <p className="text-xs text-slate-500">Check an existing work order or create a service fee without transport.</p>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Work order number</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    className="flex-1 px-4 py-3 bg-slate-50 rounded-xl font-bold text-slate-700 outline-none focus:ring-2 focus:ring-midea-blue/20"
+                    placeholder="WO-2026-0501"
+                    value={woNumber}
+                    onChange={(e) => { setWoNumber(e.target.value); setServiceSaved(false); }}
+                  />
+                  <button type="button" onClick={lookupWorkOrder} className="px-4 py-3 bg-midea-blue text-white rounded-xl text-[10px] font-black uppercase tracking-widest">Check</button>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Customer name</label>
+                <input type="text" className="w-full px-4 py-3 bg-slate-50 rounded-xl font-bold text-slate-700 outline-none" value={customerName} onChange={(e) => setCustomerName(e.target.value)} />
+              </div>
+              <ProductSearch value={product} onChange={handleProductChange} />
+              {product !== 'CAC' && (
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Sub-category</label>
+                  <select className="w-full px-4 py-4 bg-slate-50 rounded-2xl font-bold text-midea-blue outline-none" value={category} onChange={(e) => handleCategoryChange(e.target.value)}>
+                    {pricing.categoriesFor(product).map((option) => <option key={option} value={option}>{option}</option>)}
+                  </select>
+                </div>
+              )}
+            </section>
+          )}
+
+          {appTab === 'call' && (
           <section className="bg-white rounded-3xl shadow-xl border border-slate-100 p-8 space-y-6">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-8 h-8 bg-blue-50 rounded-full flex items-center justify-center">
@@ -836,6 +844,17 @@ export default function App() {
               />
             </div>
 
+            <ProductSearch value={product} onChange={handleProductChange} label="Product" />
+
+            {serviceOpen && product !== 'CAC' && (
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Sub-category (for service fee)</label>
+                <select className="w-full px-4 py-4 bg-slate-50 rounded-2xl font-bold text-midea-blue outline-none" value={category} onChange={(e) => handleCategoryChange(e.target.value)}>
+                  {pricing.categoriesFor(product).map((option) => <option key={option} value={option}>{option}</option>)}
+                </select>
+              </div>
+            )}
+
             <button 
               onClick={handleCalculate}
               disabled={isCalculating || !selectedTownship}
@@ -849,61 +868,34 @@ export default function App() {
               ) : (
                 <>
                   <Calculator className="w-4 h-4" />
-                  Calculate Fee
+                  Calculate transport
                 </>
               )}
             </button>
           </section>
+          )}
         </div>
 
-        {/* Right Panel: Results & Map */}
+        {/* Right Panel: All fees */}
         <div className="lg:col-span-7 space-y-6">
-          {calculatedFee !== null && (
+          <FeeSummary
+            transportFee={calculatedFee}
+            distanceKm={route?.distanceKm}
+            lines={serviceLines}
+            onRemoveLine={(id) => { setServiceLines((current) => current.filter((line) => line.id !== id)); setServiceSaved(false); }}
+            onToggleChargeType={toggleLineChargeType}
+            onAddClick={() => setAddServiceOpen(true)}
+            showAdd={serviceOpen || appTab === 'service-only'}
+          />
+
+          {(calculatedFee !== null || appTab === 'service-only') && (
             <div className="animate-in fade-in slide-in-from-right-4 duration-500">
-              <section className="bg-midea-blue text-white rounded-3xl shadow-2xl p-8 relative overflow-hidden">
-                <div className="relative z-10 flex justify-between items-start">
-                  <div>
-                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-midea-light-blue mb-2 block">Final Calculation</span>
-                    <div className="flex items-baseline gap-2">
-                      <h3 className="text-5xl font-black">{calculatedFee.toLocaleString()}</h3>
-                      <span className="text-xl font-bold opacity-50 uppercase tracking-widest">Ks</span>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="flex items-center justify-end gap-1.5 text-midea-light-blue mb-2">
-                      <Navigation className="w-3 h-3 fill-current" />
-                      <span className="text-[10px] font-black uppercase tracking-widest">{route?.distanceKm.toFixed(1)} km</span>
-                    </div>
-                    <div className="bg-white/10 px-3 py-1 rounded-full border border-white/10 flex items-center gap-2">
-                      <CheckCircle2 className="w-3 h-3 text-green-400" />
-                      <span className="text-[9px] font-black uppercase tracking-tighter">Verified Routing</span>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="mt-8 pt-8 border-t border-white/10 grid grid-cols-2 gap-4">
-                  <div>
-                    <span className="block text-[8px] font-black uppercase text-white/40 tracking-widest mb-1">Destination</span>
-                    <p className="text-xs font-bold truncate">{customerLocation?.name || 'Manual Selection'}</p>
-                    <span className="text-[8px] text-white/50 block mt-0.5">{customerLocation?.source || 'Manual Pin'}</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="block text-[8px] font-black uppercase text-white/40 tracking-widest mb-1">Travel Estimate</span>
-                    <p className="text-xs font-bold">{route?.durationMins ? `${Math.ceil(route.durationMins)} mins` : 'N/A'}</p>
-                  </div>
-                </div>
-
-                {/* Decorative background shape */}
-                <div className="absolute -right-20 -bottom-20 w-64 h-64 bg-midea-light-blue/20 rounded-full blur-3xl pointer-events-none" />
-              </section>
-
-              {/* Audit Log Form */}
-              <section className="bg-white rounded-3xl shadow-xl border border-slate-100 p-8 mt-6">
+              <section className="bg-white rounded-3xl shadow-xl border border-slate-100 p-8">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-8 h-8 bg-blue-50 rounded-full flex items-center justify-center">
                     <Save className="w-4 h-4 text-midea-blue" />
                   </div>
-                  <h2 className="text-sm font-black text-midea-blue uppercase tracking-widest">Finalize & Lock Fee</h2>
+                  <h2 className="text-sm font-black text-midea-blue uppercase tracking-widest">Work order</h2>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -921,17 +913,21 @@ export default function App() {
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1">
-                      <Hash className="w-3 h-3" /> Work Order No. (Optional)
+                      <Hash className="w-3 h-3" /> Work Order No. *
                     </label>
                     <input
                       type="text"
                       className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-50 rounded-xl outline-none focus:border-midea-blue/20 transition-all font-bold text-slate-700"
                       placeholder="e.g. WO-2026-0501"
                       value={woNumber}
-                      onChange={(e) => setWoNumber(e.target.value)}
+                      onChange={(e) => { setWoNumber(e.target.value); setServiceSaved(false); }}
                     />
                   </div>
-                  <div className="space-y-2 md:col-span-2">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Product</label>
+                    <p className="px-4 py-3 bg-slate-50 rounded-xl font-bold text-midea-blue">{pricing.pdLabel(product)}</p>
+                  </div>
+                  <div className="space-y-2">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1">
                       <Calendar className="w-3 h-3" /> Scheduled Date (Optional)
                     </label>
@@ -944,27 +940,57 @@ export default function App() {
                   </div>
                 </div>
 
-                <button 
-                  onClick={handleSaveAudit}
-                  disabled={isSavingAudit || isAuditSaved || !customerName}
-                  className={`w-full py-4 rounded-xl font-black uppercase tracking-[0.2em] text-xs shadow-lg transition-all flex items-center justify-center gap-2 ${
-                    isAuditSaved 
-                    ? 'bg-green-500 text-white shadow-green-500/20' 
-                    : 'bg-slate-900 text-white shadow-slate-900/20 hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:scale-100'
-                  }`}
-                >
-                  {isSavingAudit ? (
-                    <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                  ) : isAuditSaved ? (
-                    <><CheckCircle2 className="w-4 h-4" /> Fee Locked & Saved</>
-                  ) : (
-                    <><Save className="w-4 h-4" /> Save Record</>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {appTab === 'call' && calculatedFee != null && (
+                    <button 
+                      onClick={handleSaveAudit}
+                      disabled={isSavingAudit || isAuditSaved || !customerName || !woNumber.trim()}
+                      className={`py-4 rounded-xl font-black uppercase tracking-[0.2em] text-xs shadow-lg transition-all flex items-center justify-center gap-2 ${
+                        isAuditSaved 
+                        ? 'bg-green-500 text-white' 
+                        : 'bg-slate-900 text-white disabled:opacity-50'
+                      }`}
+                    >
+                      {isSavingAudit ? (
+                        <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                      ) : isAuditSaved ? (
+                        <><CheckCircle2 className="w-4 h-4" /> Transport saved</>
+                      ) : (
+                        <><Save className="w-4 h-4" /> Save transport</>
+                      )}
+                    </button>
                   )}
-                </button>
+                  {appTab === 'call' && !serviceOpen && (
+                    <button
+                      type="button"
+                      onClick={continueToService}
+                      disabled={!customerName.trim() || !woNumber.trim()}
+                      className="py-4 rounded-xl font-black uppercase tracking-[0.2em] text-xs bg-midea-blue text-white disabled:opacity-50"
+                    >
+                      Continue to service
+                    </button>
+                  )}
+                  {(serviceOpen || appTab === 'service-only') && (
+                    <button
+                      type="button"
+                      onClick={handleSaveService}
+                      disabled={isSavingService || serviceSaved}
+                      className={`py-4 rounded-xl font-black uppercase tracking-[0.2em] text-xs sm:col-span-2 ${
+                        serviceSaved ? 'bg-green-500 text-white' : 'bg-midea-blue text-white disabled:opacity-50'
+                      }`}
+                    >
+                      {serviceSaved ? 'Service fee saved for this WO' : 'Save service fee (this WO)'}
+                    </button>
+                  )}
+                  <button type="button" onClick={startNewCall} className="py-4 rounded-xl font-black uppercase tracking-[0.2em] text-xs bg-slate-100 text-slate-500 sm:col-span-2">
+                    New call
+                  </button>
+                </div>
               </section>
             </div>
           )}
 
+          {appTab === 'call' && (
           <section className={`bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden transition-all mt-6 ${showMap || calculatedFee ? 'opacity-100' : 'opacity-50 pointer-events-none grayscale'}`}>
             <div className="p-4 bg-slate-50 border-b flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -981,7 +1007,7 @@ export default function App() {
 
             <div className="h-[500px] relative">
               <MapContainer 
-                center={region === 'Yangon' ? [16.8661, 96.1951] : [21.9588, 96.0891]} 
+                center={defaultMapCenter(region)} 
                 zoom={12} 
                 className="h-full w-full"
               >
@@ -992,8 +1018,13 @@ export default function App() {
                 
                 {config.map(c => (
                   <Marker key={`${c.region}-${c.name}`} position={[c.center_lat, c.center_lng]}>
-                    <Popup className="font-bold uppercase tracking-widest text-[9px]">
-                      {c.region} Service Center
+                    <Popup>
+                      <div className="text-[10px]">
+                        <p className="font-black uppercase tracking-wide">{c.name}</p>
+                        {addressFor(c) && (
+                          <p className="text-slate-500 mt-0.5">{addressFor(c)}</p>
+                        )}
+                      </div>
                     </Popup>
                   </Marker>
                 ))}
@@ -1043,18 +1074,28 @@ export default function App() {
               </div>
             </div>
           </section>
+          )}
 
-          {!calculatedFee && !isCalculating && (
+          {appTab === 'call' && !calculatedFee && !isCalculating && (
             <div className="bg-blue-50/50 border-2 border-dashed border-blue-100 rounded-3xl p-12 text-center">
               <div className="w-16 h-16 bg-white rounded-full shadow-sm flex items-center justify-center mx-auto mb-4">
                 <Navigation className="w-8 h-8 text-blue-200" />
               </div>
               <h3 className="text-xs font-black text-blue-400 uppercase tracking-[0.2em]">Ready for Calculation</h3>
-              <p className="text-[10px] text-blue-300 mt-2 max-w-xs mx-auto">Fill in the customer details on the left and click "Calculate Fee" to see the precise cost and route.</p>
+              <p className="text-[10px] text-blue-300 mt-2 max-w-xs mx-auto">Ask location and product, then click Calculate transport. Record name and work order, then save or continue to service.</p>
             </div>
           )}
         </div>
       </div>
+        <ServiceCategoryDialog
+          open={addServiceOpen}
+          product={product}
+          category={category}
+          usedKeys={serviceLines.map((line) => line.key)}
+          onClose={() => setAddServiceOpen(false)}
+          onPickStandard={addStandardLine}
+          onPickCac={addCacLine}
+        />
     </main>
 
       {/* Footer Info */}

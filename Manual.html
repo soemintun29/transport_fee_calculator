@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VSK Transport Calculator Manual</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Myanmar:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --midea-blue: #004797;
+            --text-color: #333;
+            --bg-color: #fff;
+            --border-color: #eee;
+        }
+
+        body {
+            font-family: 'Noto Sans Myanmar', sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 40px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            background: #fff;
+        }
+
+        @media print {
+            body { background: none; margin: 0; padding: 0; }
+            .container {
+                margin: 0;
+                padding: 0;
+                box-shadow: none;
+                width: 100%;
+                max-width: none;
+            }
+            @page {
+                size: A4;
+                margin: 20mm;
+            }
+        }
+
+        header {
+            border-bottom: 3px solid var(--midea-blue);
+            margin-bottom: 30px;
+            padding-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--midea-blue);
+            text-transform: uppercase;
+        }
+
+        h1 { color: var(--midea-blue); font-size: 24px; margin-top: 0; }
+        h2 { color: var(--midea-blue); font-size: 20px; border-left: 5px solid var(--midea-blue); padding-left: 15px; margin-top: 30px; }
+        h3 { color: var(--midea-blue); font-size: 18px; margin-top: 20px; }
+
+        p { margin-bottom: 15px; text-align: justify; }
+
+        ul, ol { margin-bottom: 15px; padding-left: 25px; }
+        li { margin-bottom: 8px; }
+
+        code {
+            background-color: #f4f4f4;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+
+        .formula-box {
+            background-color: #f0f7ff;
+            border-left: 5px solid var(--midea-blue);
+            padding: 15px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+
+        .link-box {
+            background-color: #f9f9f9;
+            border: 1px dashed var(--midea-blue);
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .link-box a {
+            color: var(--midea-blue);
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        hr { border: 0; border-top: 1px solid var(--border-color); margin: 30px 0; }
+
+        .footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+            font-size: 12px;
+            color: #777;
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+    <div style="height: 6px; background: var(--midea-blue); position: fixed; top: 0; left: 0; right: 0;"></div>
+    <div class="container">
+        <header>
+            <div class="logo">VSK International Company Limited</div>
+            <div style="text-align: right; color: var(--midea-blue); font-weight: bold;">
+                MIDEA SERVICE
+            </div>
+        </header>
+
+        <h1>Transport Charge Calculator - တရားဝင် အသုံးပြုမှု လမ်းညွှန် (Official Manual)</h1>
+
+        <p>ဤစာတမ်းသည် Call Center Operations နှင့် Service Dispatch အဖွဲ့များအတွက် Transport Charge Calculator အား စနစ်တကျ အသုံးပြုနိုင်ရန် ရည်ရွယ်၍ ပြုစုထားသော တရားဝင် လမ်းညွှန်စာတမ်း ဖြစ်ပါသည်။</p>
+
+        <div class="link-box">
+            <strong>Official Webapp Link:</strong> <a href="https://transport-fee-calculator.vercel.app/">https://transport-fee-calculator.vercel.app/</a>
+        </div>
+
+        <hr>
+
+        <h2>၁။ နိဒါန်း (Introduction)</h2>
+        <p>VSK Transport Charge Calculator သည် ကုန်စ္စည်းပို့ဆောင်ခနှင့် ဝန်ဆောင်မှုသွားရောက်ခ (Transport Fees) များကို စံသတ်မှတ်ချက်တစ်ခုတည်းဖြင့် တိကျစွာ တွက်ချက်နိုင်ရန် ထုတ်လုပ်ထားသော Tool ဖြစ်ပါသည်။ ဤစနစ်သည် ရန်ကုန်နှင့် မန္တလေးမြို့ကြီးများရှိ ဝန်ဆောင်မှုဌာနများအတွက် သယ်ယူပို့ဆောင်ခများကို တရားမျှတပြီး ပွင့်လင်းမြင်သာမှုရှိစေရန် ဖြစ်ပါသည်။</p>
+
+        <h2>၂။ အဓိက လုပ်ဆောင်ချက်များ (Core Features)</h2>
+        <ul>
+            <li><strong>လိပ်စာအလိုက် ရှာဖွေခြင်း (Address-based lookup):</strong> တိုင်းဒေသကြီး၊ မြို့နယ် နှင့် ရပ်ကွက် (Region -> Township -> Ward) အလိုက် တိကျသော ဒေတာများကို အသုံးပြု၍ ရှာဖွေနိုင်ခြင်း။</li>
+            <li><strong>အလိုအလျောက် အကွာအဝေး တွက်ချက်ခြင်း (Automated distance calculation):</strong> OSRM (Open Source Routing Machine) စနစ်ကို အသုံးပြု၍ ဝန်ဆောင်မှုစင်တာမှ ဝယ်ယူသူ၏ လိပ်စာအထိ အမှန်တကယ် မောင်းနှင်ရမည့် လမ်းကြောင်းအကွာအဝေးကို တွက်ချက်ပေးခြင်း။</li>
+            <li><strong>မြေပုံစနစ် (Map integration):</strong> ဝယ်ယူသူ၏ တည်နေရာကို မြေပုံပေါ်တွင် တိကျစွာ ကြည့်ရှုနိုင်ပြီး လိုအပ်ပါက Manual Pin ရွှေ့၍ တည်နေရာကို ပြင်ဆင်နိုင်ခြင်း။</li>
+            <li><strong>၁,၀၀၀ ကျပ်အထိ အနည်းဆုံးသတ်မှတ်ခြင်း (Rounding rule):</strong> ထွက်ပေါ်လာသော ကျသင့်ငွေကို အနီးစပ်ဆုံး ၁,၀၀၀ ကျပ်သို့ အလိုအလျောက် ပြောင်းလဲပေးခြင်း။</li>
+        </ul>
+
+        <h2>၃။ တွက်ချက်မှုဆိုင်ရာ မူဝါဒ (Calculation Logic)</h2>
+        <p>ပို့ဆောင်ခ တွက်ချက်ရာတွင် အောက်ပါအတိုင်း သတ်မှတ်ထားသော ပုံသေနည်း (Formula) ကို အသုံးပြုပါသည်။</p>
+
+        <div class="formula-box">
+            စုစုပေါင်းကျသင့်ငွေ = အခြေခံနှုန်းထား + ((အမှန်တကယ်အကွာအဝေး - အခြေခံအကွာအဝေး) × သတ်မှတ် ကီလိုမီတာနှုန်းထား)
+        </div>
+
+        <h3>သတ်မှတ်ချက်များ:</h3>
+        <ul>
+            <li><strong>အခြေခံနှုန်းထား (Base Fee):</strong> သတ်မှတ်ထားသော ကီလိုမီတာ (ဥပမာ - ၃ ကီလိုမီတာ) အတွင်း ပေးဆောင်ရမည့် အနည်းဆုံးနှုန်းထား။</li>
+            <li><strong>၁ ကီလိုမီတာနှုန်းထား (Per-KM Rate):</strong> အခြေခံအကွာအဝေးထက် ကျော်လွန်ပါက ၁ ကီလိုမီတာလျှင် ထပ်မံပေးဆောင်ရမည့်နှုန်းထား။</li>
+            <li><strong>အနည်းဆုံးသတ်မှတ်ခြင်း (Rounding Rule):</strong> နောက်ဆုံးကျသင့်ငွေကို ၁,၀၀၀ ကျပ်သို့ အနီးစပ်ဆုံး (Nearest 1,000) ညှိပေးပါသည်။
+                <ul>
+                    <li><em>ဥပမာ ၁:</em> တွက်ချက်မှုအရ ၁၁,၄၀၀ ကျပ် ထွက်ပါက ၁၁,၀၀၀ ကျပ် ဟု သတ်မှတ်မည်။</li>
+                    <li><em>ဥပမာ ၂:</em> တွက်ချက်မှုအရ ၁၁,၅၀၀ ကျပ် သို့မဟုတ် ၁၁,၆၀၀ ကျပ် ထွက်ပါက ၁၂,၀၀၀ ကျပ် ဟု သတ်မှတ်မည်။</li>
+                </ul>
+            </li>
+            <li><strong>ယာဉ်အမျိုးအစား:</strong> ယခုစနစ်ကို မော်တော်ယာဉ် (Single-vehicle standard rate) တစ်မျိုးတည်းအတွက်သာ စံနှုန်းအဖြစ် သတ်မှတ်ထားပါသည်။</li>
+        </ul>
+
+        <h2>၄။ စီမံခန့်ခွဲမှုနှင့် ပြင်ဆင်သတ်မှတ်ခြင်း (Admin & Configuration)</h2>
+        <p>ကြီးကြပ်သူ (Supervisors) များအနေဖြင့် နှုန်းထားများကို လိုအပ်သလို ပြင်ဆင်နိုင်ပါသည်။</p>
+        <ul>
+            <li><strong>Access Settings:</strong> စနစ်၏ ညာဘက်အပေါ်ထောင့်ရှိ <strong>Settings (ဂီယာပုံ)</strong> ကို နှိပ်ပါ။</li>
+            <li><strong>Password:</strong> စီမံခန့်ခွဲမှုအပိုင်းသို့ ဝင်ရောက်ရန် စကားဝှက် ဖြစ်ပါသည်။</li>
+            <li><strong>Updating Rates:</strong>
+                <ul>
+                    <li>Base Fee (အခြေခံနှုန်းထား)</li>
+                    <li>Base Distance (အခြေခံအကွာအဝေး)</li>
+                    <li>Fee per KM (၁ ကီလိုမီတာနှုန်းထား)</li>
+                    <li>အနီးဆုံး Service Center Coordinates (အနီးဆုံးဌာနခွဲ၏ တည်နေရာ လတ္တီတွဒ်နှင့် လောင်ဂျီတွဒ်)</li>
+                </ul>
+            </li>
+            <li><strong>Save:</strong> ပြင်ဆင်ပြီးပါက "Save Settings" ကို နှိပ်၍ သိမ်းဆည်းပါ။</li>
+        </ul>
+
+        <h2>၅။ အသုံးပြုသူလမ်းညွှန် (User Guide)</h2>
+        <p>Dispatch အဖွဲ့မှ ပို့ဆောင်ခ တွက်ချက်ရန် အောက်ပါအဆင့်များကို လိုက်နာပါ-</p>
+        <ol>
+            <li><strong>Region ရွေးချယ်ပါ:</strong> ရန်ကုန် သို့မဟုတ် မန္တလေးကို ရွေးပါ။</li>
+            <li><strong>မြို့နယ်နှင့် ရပ်ကွက် ရွေးချယ်ပါ:</strong> ဝယ်ယူသူ၏ လိပ်စာရှိ မြို့နယ်နှင့် ရပ်ကွက်ကို ရွေးချယ်ပါ။</li>
+            <li><strong>အသေးစိတ်လိပ်စာ (ရွေးချယ်ရန်):</strong> ပိုမိုတိကျစေရန် လမ်းအမည် သို့မဟုတ် အိမ်အမှတ်ကို ရိုက်ထည့်ပါ။</li>
+            <li><strong>Calculate Fee:</strong> ခလုတ်ကို နှိပ်၍ ပို့ဆောင်ခကို တွက်ချက်ပါ။</li>
+            <li><strong>မြေပုံပေါ်တွင် စစ်ဆေးပါ:</strong> လိုအပ်ပါက မြေပုံပေါ်ရှိ Pin ကို ဝယ်ယူသူ၏ အိမ်တည်နေရာ အတိအကျသို့ ရွှေ့ပါ။ ပို့ဆောင်ခသည် အလိုအလျောက် ပြန်လည်တွက်ချက်ပေးမည် ဖြစ်သည်။</li>
+            <li><strong>ဒေတာသိမ်းဆည်းခြင်း:</strong> ဝယ်ယူသူအမည်၊ Work Order နံပါတ်နှင့် ချိန်းဆိုသည့်ရက်စွဲကို ဖြည့်စွက်ပြီး "Lock & Save Fee" ကို နှိပ်၍ မှတ်တမ်းတင်ပါ။</li>
+        </ol>
+
+        <h2>၆။ ပြဿနာဖြေရှင်းခြင်း (Troubleshooting)</h2>
+        <ul>
+            <li><strong>မြေပုံမတက်လာပါက:</strong> အင်တာနက် ချိတ်ဆက်မှု ရှိ/မရှိ စစ်ဆေးပါ။ Browser ကို Refresh လုပ်ကြည့်ပါ။</li>
+            <li><strong>လိပ်စာရှာမတွေ့ပါက:</strong> မြို့နယ်ကို မှန်ကန်အောင် ရွေးချယ်ပြီး ရပ်ကွက်စာရင်းကို ထပ်မံစစ်ဆေးပါ။ လုံးဝ ရှာမတွေ့ပါက မြေပုံပေါ်တွင် Manual Pin ကို အသုံးပြု၍ တည်နေရာ သတ်မှတ်ပါ။</li>
+            <li><strong>ဒေတာသိမ်းမရပါက:</strong> Database ချိတ်ဆက်မှု ရှိမရှိ သို့မဟုတ် စနစ်သို့ Log in ဝင်ထားခြင်း ရှိမရှိ စစ်ဆေးပါ။</li>
+        </ul>
+
+        <div class="footer">
+            <div>
+                <strong>ပြုစုသူ:</strong> စိုးမင်းထွန်း<br>
+                <strong>ဗားရှင်း:</strong> 1.0.0
+            </div>
+            <div style="text-align: right;">
+                <strong>နေ့စွဲ:</strong> ၂၀၂၆ ခုနှစ်၊ မေလ ၂၈ ရက်
+            </div>
+        </div>
+    </div>
+</body>
+</html>
